@@ -56,13 +56,12 @@ namespace ParcialTienditaUmU.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create([Bind("idUser,username,password,fullName,rol,isAdmin")] User user)
         {
-            if (ModelState.IsValid)
-            {
+            
                 _context.Add(user);
                 await _context.SaveChangesAsync();
                 return RedirectToAction(nameof(Index));
-            }
-            return View(user);
+            
+      
         }
 
         // GET: Users/Edit/5
@@ -93,8 +92,7 @@ namespace ParcialTienditaUmU.Controllers
                 return NotFound();
             }
 
-            if (ModelState.IsValid)
-            {
+           
                 try
                 {
                     _context.Update(user);
@@ -112,8 +110,7 @@ namespace ParcialTienditaUmU.Controllers
                     }
                 }
                 return RedirectToAction(nameof(Index));
-            }
-            return View(user);
+            
         }
 
         // GET: Users/Delete/5

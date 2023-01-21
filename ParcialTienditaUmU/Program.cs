@@ -1,5 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
+using ParcialTienditaUmU.Configuration;
 using ParcialTienditaUmU.Data;
 var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddDbContext<ParcialTienditaUmUContext>(options =>
@@ -8,6 +9,7 @@ builder.Services.AddDbContext<ParcialTienditaUmUContext>(options =>
 // Add services to the container.
 builder.Services.AddControllersWithViews();
 
+builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.

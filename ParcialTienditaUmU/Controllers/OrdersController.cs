@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
+using ParcialTienditaUmU.Configuration;
 using ParcialTienditaUmU.Data;
 using ParcialTienditaUmU.Models;
 
@@ -13,28 +14,24 @@ namespace ParcialTienditaUmU.Controllers
     public class OrdersController : Controller
     {
         private readonly ParcialTienditaUmUContext _context;
+        private readonly IUnitOfWork _unitOfWork;
 
-        public OrdersController(ParcialTienditaUmUContext context)
+        public OrdersController(ParcialTienditaUmUContext context, IUnitOfWork unitOfWork)
         {
             _context = context;
+            _unitOfWork = unitOfWork;
         }
 
         // GET: Orders
         public async Task<IActionResult> Index()
         {
-              return View(await _context.Orders.ToListAsync());
+              return View(await _unitOfWork.OrderRepository.GetAllAsync());
         }
 
         // GET: Orders/Details/5
-        public async Task<IActionResult> Details(int? id)
+        public async Task<IActionResult> Details(int id)
         {
-            if (id == null || _context.Orders == null)
-            {
-                return NotFound();
-            }
-
-            var orders = await _context.Orders
-                .FirstOrDefaultAsync(m => m.orderId == id);
+            var orders = await _unitOfWork.OrderRepository.GetByIdAsync(id);
             if (orders == null)
             {
                 return NotFound();
@@ -56,24 +53,18 @@ namespace ParcialTienditaUmU.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create([Bind("orderId,userId,orderDate,totalPrice")] Orders orders)
         {
-            if (ModelState.IsValid)
-            {
-                _context.Add(orders);
-                await _context.SaveChangesAsync();
+            
+                _unitOfWork.OrderRepository.Add(orders);
+                _unitOfWork.Commit();
                 return RedirectToAction(nameof(Index));
-            }
-            return View(orders);
+            
         }
 
         // GET: Orders/Edit/5
-        public async Task<IActionResult> Edit(int? id)
+        public async Task<IActionResult> Edit(int id)
         {
-            if (id == null || _context.Orders == null)
-            {
-                return NotFound();
-            }
 
-            var orders = await _context.Orders.FindAsync(id);
+            var orders = await _unitOfWork.OrderRepository.GetByIdAsync(id);
             if (orders == null)
             {
                 return NotFound();
@@ -93,12 +84,11 @@ namespace ParcialTienditaUmU.Controllers
                 return NotFound();
             }
 
-            if (ModelState.IsValid)
-            {
+            
                 try
                 {
-                    _context.Update(orders);
-                    await _context.SaveChangesAsync();
+                    _unitOfWork.OrderRepository.Update(orders);
+                    _unitOfWork.Commit();
                 }
                 catch (DbUpdateConcurrencyException)
                 {
@@ -112,20 +102,18 @@ namespace ParcialTienditaUmU.Controllers
                     }
                 }
                 return RedirectToAction(nameof(Index));
-            }
-            return View(orders);
+            
         }
 
         // GET: Orders/Delete/5
-        public async Task<IActionResult> Delete(int? id)
+        public async Task<IActionResult> Delete(int id)
         {
             if (id == null || _context.Orders == null)
             {
                 return NotFound();
             }
 
-            var orders = await _context.Orders
-                .FirstOrDefaultAsync(m => m.orderId == id);
+            var orders = await _unitOfWork.OrderRepository.GetByIdAsync(id);
             if (orders == null)
             {
                 return NotFound();
@@ -143,19 +131,19 @@ namespace ParcialTienditaUmU.Controllers
             {
                 return Problem("Entity set 'ParcialTienditaUmUContext.Orders'  is null.");
             }
-            var orders = await _context.Orders.FindAsync(id);
+            var orders = await _unitOfWork.OrderRepository.GetByIdAsync(id);
             if (orders != null)
             {
-                _context.Orders.Remove(orders);
+                _unitOfWork.OrderRepository.Delete(id);
             }
             
-            await _context.SaveChangesAsync();
+            _unitOfWork.Commit();
             return RedirectToAction(nameof(Index));
         }
 
         private bool OrdersExists(int id)
         {
-          return _context.Orders.Any(e => e.orderId == id);
+          return _unitOfWork.OrderRepository.GetByIdAsync(id) != null;
         }
     }
 }

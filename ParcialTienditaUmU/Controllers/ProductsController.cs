@@ -56,13 +56,12 @@ namespace ParcialTienditaUmU.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create([Bind("idProduct,productName,productPrice,stock,category")] Products products)
         {
-            if (ModelState.IsValid)
-            {
+            
                 _context.Add(products);
                 await _context.SaveChangesAsync();
                 return RedirectToAction(nameof(Index));
-            }
-            return View(products);
+            
+        
         }
 
         // GET: Products/Edit/5
@@ -93,8 +92,7 @@ namespace ParcialTienditaUmU.Controllers
                 return NotFound();
             }
 
-            if (ModelState.IsValid)
-            {
+            
                 try
                 {
                     _context.Update(products);
@@ -112,8 +110,7 @@ namespace ParcialTienditaUmU.Controllers
                     }
                 }
                 return RedirectToAction(nameof(Index));
-            }
-            return View(products);
+            
         }
 
         // GET: Products/Delete/5
