@@ -1,10 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.Rendering;
+﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using ParcialTienditaUmU.Configuration;
 using ParcialTienditaUmU.Data;
 using ParcialTienditaUmU.Models;
 
@@ -13,28 +9,24 @@ namespace ParcialTienditaUmU.Controllers
     public class UsersController : Controller
     {
         private readonly ParcialTienditaUmUContext _context;
-
-        public UsersController(ParcialTienditaUmUContext context)
+        private readonly IUnitOfWork _unitOfWork;
+        public UsersController(ParcialTienditaUmUContext context, IUnitOfWork unitOfWork)
         {
             _context = context;
+            _unitOfWork = unitOfWork;
         }
 
         // GET: Users
         public async Task<IActionResult> Index()
         {
-              return View(await _context.User.ToListAsync());
+            return View(await _unitOfWork.UsersRepository.GetAllAsync());
         }
 
         // GET: Users/Details/5
-        public async Task<IActionResult> Details(int? id)
+        public async Task<IActionResult> Details(int id)
         {
-            if (id == null || _context.User == null)
-            {
-                return NotFound();
-            }
 
-            var user = await _context.User
-                .FirstOrDefaultAsync(m => m.idUser == id);
+            var user = await _unitOfWork.UsersRepository.GetByIdAsync(id);
             if (user == null)
             {
                 return NotFound();
@@ -56,23 +48,23 @@ namespace ParcialTienditaUmU.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create([Bind("idUser,username,password,fullName,rol,isAdmin")] User user)
         {
-            
-                _context.Add(user);
-                await _context.SaveChangesAsync();
-                return RedirectToAction(nameof(Index));
-            
-      
+
+            _unitOfWork.UsersRepository.Add(user);
+            _unitOfWork.Commit();
+            return RedirectToAction(nameof(Index));
+
+
         }
 
         // GET: Users/Edit/5
-        public async Task<IActionResult> Edit(int? id)
+        public async Task<IActionResult> Edit(int id)
         {
             if (id == null || _context.User == null)
             {
                 return NotFound();
             }
 
-            var user = await _context.User.FindAsync(id);
+            var user = await _unitOfWork.UsersRepository.GetByIdAsync(id);
             if (user == null)
             {
                 return NotFound();
@@ -92,37 +84,36 @@ namespace ParcialTienditaUmU.Controllers
                 return NotFound();
             }
 
-           
-                try
+
+            try
+            {
+               _unitOfWork.UsersRepository.Update(user);
+                _unitOfWork.Commit();
+            }
+            catch (DbUpdateConcurrencyException)
+            {
+                if (!UserExists(user.idUser))
                 {
-                    _context.Update(user);
-                    await _context.SaveChangesAsync();
+                    return NotFound();
                 }
-                catch (DbUpdateConcurrencyException)
+                else
                 {
-                    if (!UserExists(user.idUser))
-                    {
-                        return NotFound();
-                    }
-                    else
-                    {
-                        throw;
-                    }
+                    throw;
                 }
-                return RedirectToAction(nameof(Index));
-            
+            }
+            return RedirectToAction(nameof(Index));
+
         }
 
         // GET: Users/Delete/5
-        public async Task<IActionResult> Delete(int? id)
+        public async Task<IActionResult> Delete(int id)
         {
             if (id == null || _context.User == null)
             {
                 return NotFound();
             }
 
-            var user = await _context.User
-                .FirstOrDefaultAsync(m => m.idUser == id);
+            var user = await _unitOfWork.UsersRepository.GetByIdAsync(id);
             if (user == null)
             {
                 return NotFound();
@@ -140,19 +131,20 @@ namespace ParcialTienditaUmU.Controllers
             {
                 return Problem("Entity set 'ParcialTienditaUmUContext.User'  is null.");
             }
-            var user = await _context.User.FindAsync(id);
-            if (user != null)
+
+            var users = await _unitOfWork.UsersRepository.GetByIdAsync(id);
+            if (users != null)
             {
-                _context.User.Remove(user);
+                _unitOfWork.UsersRepository.Delete(id);
             }
-            
-            await _context.SaveChangesAsync();
+
+            _unitOfWork.Commit();
             return RedirectToAction(nameof(Index));
         }
 
         private bool UserExists(int id)
         {
-          return _context.User.Any(e => e.idUser == id);
+            return _unitOfWork.UsersRepository.GetByIdAsync(id) != null;
         }
     }
 }

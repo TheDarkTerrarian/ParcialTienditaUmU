@@ -22,10 +22,6 @@ namespace ParcialTienditaUmU.Services
         public virtual async void Delete(int id)
         {
             var entity = await _dbSet.FindAsync(id);
-            if (entity == null)
-            {
-                throw new Exception("La entidad no existe");
-            }
             _dbSet.Remove(entity);
 
         }

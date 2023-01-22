@@ -7,6 +7,9 @@ namespace ParcialTienditaUmU.Configuration
     {
 
         IOrderRepository OrderRepository { get; }
+        IProductsRepository ProductsRepository { get; }
+        ISellsRepository SellsRepository { get; }
+        IUsersRepository UsersRepository { get; }
         void Commit();
         void Dispose();
 

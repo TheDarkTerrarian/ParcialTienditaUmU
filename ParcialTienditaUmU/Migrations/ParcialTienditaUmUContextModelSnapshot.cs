@@ -42,7 +42,7 @@ namespace ParcialTienditaUmU.Migrations
 
                     b.HasKey("orderId");
 
-                    b.ToTable("Orders");
+                    b.ToTable("Orders", (string)null);
                 });
 
             modelBuilder.Entity("ParcialTienditaUmU.Models.Products", b =>
@@ -79,7 +79,7 @@ namespace ParcialTienditaUmU.Migrations
 
                     b.HasIndex("SellssellId");
 
-                    b.ToTable("Products");
+                    b.ToTable("Products", (string)null);
                 });
 
             modelBuilder.Entity("ParcialTienditaUmU.Models.Sells", b =>
@@ -102,7 +102,7 @@ namespace ParcialTienditaUmU.Migrations
 
                     b.HasKey("sellId");
 
-                    b.ToTable("Sells");
+                    b.ToTable("Sells", (string)null);
                 });
 
             modelBuilder.Entity("ParcialTienditaUmU.Models.User", b =>
@@ -135,7 +135,7 @@ namespace ParcialTienditaUmU.Migrations
 
                     b.HasKey("idUser");
 
-                    b.ToTable("User");
+                    b.ToTable("User", (string)null);
                 });
 
             modelBuilder.Entity("ParcialTienditaUmU.Models.Products", b =>

@@ -1,10 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.Rendering;
+﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using ParcialTienditaUmU.Configuration;
 using ParcialTienditaUmU.Data;
 using ParcialTienditaUmU.Models;
 
@@ -13,28 +9,25 @@ namespace ParcialTienditaUmU.Controllers
     public class ProductsController : Controller
     {
         private readonly ParcialTienditaUmUContext _context;
+        private readonly IUnitOfWork _unitOfWork;
 
-        public ProductsController(ParcialTienditaUmUContext context)
+        public ProductsController(ParcialTienditaUmUContext context, IUnitOfWork unitOfWork)
         {
             _context = context;
+            _unitOfWork = unitOfWork;
         }
 
         // GET: Products
         public async Task<IActionResult> Index()
         {
-              return View(await _context.Products.ToListAsync());
+            return View(await _unitOfWork.ProductsRepository.GetAllAsync());
         }
 
         // GET: Products/Details/5
-        public async Task<IActionResult> Details(int? id)
+        public async Task<IActionResult> Details(int id)
         {
-            if (id == null || _context.Products == null)
-            {
-                return NotFound();
-            }
 
-            var products = await _context.Products
-                .FirstOrDefaultAsync(m => m.idProduct == id);
+            var products = await _unitOfWork.ProductsRepository.GetByIdAsync(id);
             if (products == null)
             {
                 return NotFound();
@@ -56,23 +49,19 @@ namespace ParcialTienditaUmU.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create([Bind("idProduct,productName,productPrice,stock,category")] Products products)
         {
-            
-                _context.Add(products);
-                await _context.SaveChangesAsync();
-                return RedirectToAction(nameof(Index));
-            
-        
+
+            _unitOfWork.ProductsRepository.Add(products);
+            _unitOfWork.Commit();
+            return RedirectToAction(nameof(Index));
+
+
         }
 
         // GET: Products/Edit/5
-        public async Task<IActionResult> Edit(int? id)
+        public async Task<IActionResult> Edit(int id)
         {
-            if (id == null || _context.Products == null)
-            {
-                return NotFound();
-            }
 
-            var products = await _context.Products.FindAsync(id);
+            var products = await _unitOfWork.ProductsRepository.GetByIdAsync(id);
             if (products == null)
             {
                 return NotFound();
@@ -92,37 +81,36 @@ namespace ParcialTienditaUmU.Controllers
                 return NotFound();
             }
 
-            
-                try
+
+            try
+            {
+                _unitOfWork.ProductsRepository.Update(products);
+                _unitOfWork.Commit();
+            }
+            catch (DbUpdateConcurrencyException)
+            {
+                if (!ProductsExists(products.idProduct))
                 {
-                    _context.Update(products);
-                    await _context.SaveChangesAsync();
+                    return NotFound();
                 }
-                catch (DbUpdateConcurrencyException)
+                else
                 {
-                    if (!ProductsExists(products.idProduct))
-                    {
-                        return NotFound();
-                    }
-                    else
-                    {
-                        throw;
-                    }
+                    throw;
                 }
-                return RedirectToAction(nameof(Index));
-            
+            }
+            return RedirectToAction(nameof(Index));
+
         }
 
         // GET: Products/Delete/5
-        public async Task<IActionResult> Delete(int? id)
+        public async Task<IActionResult> Delete(int id)
         {
             if (id == null || _context.Products == null)
             {
                 return NotFound();
             }
 
-            var products = await _context.Products
-                .FirstOrDefaultAsync(m => m.idProduct == id);
+            var products = await _unitOfWork.ProductsRepository.GetByIdAsync(id);
             if (products == null)
             {
                 return NotFound();
@@ -140,19 +128,20 @@ namespace ParcialTienditaUmU.Controllers
             {
                 return Problem("Entity set 'ParcialTienditaUmUContext.Products'  is null.");
             }
-            var products = await _context.Products.FindAsync(id);
+
+            var products = await _unitOfWork.ProductsRepository.GetByIdAsync(id);
             if (products != null)
             {
-                _context.Products.Remove(products);
+                _unitOfWork.ProductsRepository.Delete(id);
             }
-            
-            await _context.SaveChangesAsync();
+
+            _unitOfWork.Commit();
             return RedirectToAction(nameof(Index));
         }
 
         private bool ProductsExists(int id)
         {
-          return _context.Products.Any(e => e.idProduct == id);
+            return _unitOfWork.ProductsRepository.GetByIdAsync(id) != null;
         }
     }
 }
