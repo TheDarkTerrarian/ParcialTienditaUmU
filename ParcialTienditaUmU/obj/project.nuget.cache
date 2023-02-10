@@ -1,8 +1,8 @@
 {
   "version": 2,
-  "dgSpecHash": "LptBMSVg+Rnn9wcr1mKuFfMlfsoyms6OXO3YA3OPZhPmm1kbFy/btjTTjzm1zojKLIFnzrJ+mfJ6DBetmJkBWQ==",
+  "dgSpecHash": "kOl1M5Es++IkkBVbZJBNVLvUeikS0HASLJYzUSYxh2t3mpZdRmv92clm5mGj4mEKjLNVrZOyAeScnDhBRW7jMQ==",
   "success": true,
-  "projectFilePath": "C:\\Users\\Admin\\Desktop\\ParcialTienditaUmU\\ParcialTienditaUmU\\ParcialTienditaUmU.csproj",
+  "projectFilePath": "C:\\Users\\Admin\\source\\repos\\ParcialTienditaUmU\\ParcialTienditaUmU\\ParcialTienditaUmU.csproj",
   "expectedPackageFiles": [
     "C:\\Users\\Admin\\.nuget\\packages\\humanizer.core\\2.8.26\\humanizer.core.2.8.26.nupkg.sha512",
     "C:\\Users\\Admin\\.nuget\\packages\\messagepack\\2.1.152\\messagepack.2.1.152.nupkg.sha512",

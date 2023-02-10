@@ -1,7 +1,14 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
+using ParcialTienditaUmU;
+using ParcialTienditaUmU.CommandHandler;
+using ParcialTienditaUmU.Commands;
 using ParcialTienditaUmU.Configuration;
 using ParcialTienditaUmU.Data;
+using ParcialTienditaUmU.DTOs;
+using ParcialTienditaUmU.Models;
+using ParcialTienditaUmU.QueryHandler;
+
 var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddDbContext<ParcialTienditaUmUContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("ParcialTienditaUmUContext") ?? throw new InvalidOperationException("Connection string 'ParcialTienditaUmUContext' not found.")));
@@ -10,6 +17,12 @@ builder.Services.AddDbContext<ParcialTienditaUmUContext>(options =>
 builder.Services.AddControllersWithViews();
 
 builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
+
+builder.Services.AddScoped<ICommandHandler<ProductsDTO>, AddProductsCommandHandler>();
+builder.Services.AddScoped<ICommandHandler<RemoveByIdCommands>, RemoveProductsCommandHandler>();
+builder.Services.AddScoped<IQueryHandler<Products, QueryByIdCommands>, ProductsQueryHandler>();
+builder.Services.AddScoped<ICommandHandler<Products>, UpdateProductsCommandHandler>();
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.

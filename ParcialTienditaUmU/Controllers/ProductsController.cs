@@ -1,7 +1,9 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using ParcialTienditaUmU.Commands;
 using ParcialTienditaUmU.Configuration;
 using ParcialTienditaUmU.Data;
+using ParcialTienditaUmU.DTOs;
 using ParcialTienditaUmU.Models;
 
 namespace ParcialTienditaUmU.Controllers
@@ -11,23 +13,34 @@ namespace ParcialTienditaUmU.Controllers
         private readonly ParcialTienditaUmUContext _context;
         private readonly IUnitOfWork _unitOfWork;
 
-        public ProductsController(ParcialTienditaUmUContext context, IUnitOfWork unitOfWork)
+        private readonly ICommandHandler<ProductsDTO> _productsCommandHandler;
+        private readonly ICommandHandler<RemoveByIdCommands> _removeCommandHandler;
+        private readonly IQueryHandler<Products, QueryByIdCommands> _productsQueryHandler;
+        private readonly ICommandHandler<Products> _updateCommandHandler;
+
+        public ProductsController(ParcialTienditaUmUContext context, IUnitOfWork unitOfWork, ICommandHandler<Products> updateCommandHandler, IQueryHandler<Products, QueryByIdCommands> productsQueryHandler, ICommandHandler<RemoveByIdCommands> removeCommandHandler, ICommandHandler<ProductsDTO> productsCommandHandler)
         {
             _context = context;
             _unitOfWork = unitOfWork;
+            _productsQueryHandler = productsQueryHandler;
+            _productsCommandHandler= productsCommandHandler;
+            _removeCommandHandler= removeCommandHandler;
+            _updateCommandHandler = updateCommandHandler;    
         }
 
         // GET: Products
-        public async Task<IActionResult> Index()
+        public async Task<ActionResult<IEnumerable<Products>>> Index()
         {
-            return View(await _unitOfWork.ProductsRepository.GetAllAsync());
+            return View(await _productsQueryHandler.GetAll());
         }
 
         // GET: Products/Details/5
-        public async Task<IActionResult> Details(int id)
+        public async Task<ActionResult<IEnumerable<Products>>> Details(int id)
         {
 
-            var products = await _unitOfWork.ProductsRepository.GetByIdAsync(id);
+            var products = await _productsQueryHandler.GetOne(new QueryByIdCommands() { 
+                Id = id
+            });
             if (products == null)
             {
                 return NotFound();
@@ -47,11 +60,10 @@ namespace ParcialTienditaUmU.Controllers
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("idProduct,productName,productPrice,stock,category")] Products products)
+        public async Task<IActionResult> Create([Bind("idProduct,productName,productPrice,stock,category")] ProductsDTO products)
         {
 
-            _unitOfWork.ProductsRepository.Add(products);
-            _unitOfWork.Commit();
+            _productsCommandHandler.Execute(products);        
             return RedirectToAction(nameof(Index));
 
 
@@ -61,7 +73,10 @@ namespace ParcialTienditaUmU.Controllers
         public async Task<IActionResult> Edit(int id)
         {
 
-            var products = await _unitOfWork.ProductsRepository.GetByIdAsync(id);
+            var products = await _productsQueryHandler.GetOne(new QueryByIdCommands()
+            {
+                Id = id
+            });
             if (products == null)
             {
                 return NotFound();
@@ -84,8 +99,7 @@ namespace ParcialTienditaUmU.Controllers
 
             try
             {
-                _unitOfWork.ProductsRepository.Update(products);
-                _unitOfWork.Commit();
+                _updateCommandHandler.Execute(products);
             }
             catch (DbUpdateConcurrencyException)
             {
@@ -110,7 +124,7 @@ namespace ParcialTienditaUmU.Controllers
                 return NotFound();
             }
 
-            var products = await _unitOfWork.ProductsRepository.GetByIdAsync(id);
+            var products = await _productsQueryHandler.GetOne(new QueryByIdCommands() { Id = id });
             if (products == null)
             {
                 return NotFound();
@@ -132,16 +146,18 @@ namespace ParcialTienditaUmU.Controllers
             var products = await _unitOfWork.ProductsRepository.GetByIdAsync(id);
             if (products != null)
             {
-                _unitOfWork.ProductsRepository.Delete(id);
+                _removeCommandHandler.Execute(new RemoveByIdCommands() { Id = id });
             }
-
-            _unitOfWork.Commit();
+         
             return RedirectToAction(nameof(Index));
         }
 
         private bool ProductsExists(int id)
         {
-            return _unitOfWork.ProductsRepository.GetByIdAsync(id) != null;
+            return _productsQueryHandler.GetOne(new QueryByIdCommands()
+            {
+                Id = id
+            })!= null;
         }
     }
 }
